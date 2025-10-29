@@ -1,0 +1,189 @@
+/* =====================================
+   SISTEMA DE INVENTARIO - ESTILOS GLOBALES
+   Tema: Verde / Azul / Naranjo
+   ===================================== */
+
+/* ======= General ======= */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 0;
+}
+
+/* ======= HEADER ======= */
+header {
+  z-index: 1000;
+}
+
+/* Divisor decorativo entre header y contenido */
+.b-example-divider {
+  height: 3rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: solid rgba(0, 0, 0, 0.1);
+  border-width: 1px 0;
+  box-shadow: inset 0 0.5em 1.5em rgba(0, 0, 0, 0.05),
+    inset 0 0.125em 0.5em rgba(0, 0, 0, 0.1);
+}
+
+/* Campo de búsqueda oscuro (si lo usas en modo dark) */
+.form-control-dark {
+  color: #fff;
+  background-color: var(--bs-dark);
+  border-color: var(--bs-gray);
+}
+.form-control-dark:focus {
+  color: #fff;
+  background-color: var(--bs-dark);
+  border-color: #fff;
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+}
+
+/* Íconos Bootstrap */
+.bi {
+  vertical-align: -0.125em;
+  fill: currentColor;
+}
+
+/* Texto pequeño del menú */
+.text-small {
+  font-size: 85%;
+}
+
+/* Botones del header */
+header .btn-success {
+  background-color: #198754;
+  border-color: #198754;
+}
+header .btn-success:hover {
+  background-color: #157347;
+}
+header .btn-outline-success:hover {
+  background-color: #198754;
+  color: #fff;
+}
+
+/* Menú de navegación del header */
+header .bg-success {
+  background-color: #198754 !important;
+}
+header .nav-link.text-warning {
+  color: #ffc107 !important;
+}
+header .nav-link.text-warning:hover {
+  color: #ffcd39 !important;
+}
+
+/* ======= Título Principal ======= */
+header h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.3rem;
+  color: #198754;
+}
+header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+/* ======= Tarjetas de estadísticas ======= */
+.card {
+  border: none;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+.card h3 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ======= Formulario ======= */
+.card-header {
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  background-color: #198754 !important;
+}
+.form-label {
+  font-weight: 500;
+  color: #198754;
+}
+.form-control,
+.form-select {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: #198754;
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* ======= Botones ======= */
+button.btn {
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+}
+button.btn-warning {
+  color: #000;
+}
+button.btn-warning:hover {
+  background-color: #f0ad4e;
+}
+
+/* ======= Tabla ======= */
+.table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+}
+.table thead {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.table-hover tbody tr:hover {
+  background-color: #e6f5ec; /* Verde claro */
+}
+
+/* ======= Buscador ======= */
+#buscar {
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #198754;
+}
+#buscar:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* ======= Alertas ======= */
+#alert {
+  margin-top: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ======= Ocultos ======= */
+.d-none {
+  display: none !important;
+}
+
+/* ======= Responsive ======= */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.8rem;
+  }
+  .form-control,
+  .form-select {
+    font-size: 0.95rem;
+  }
+  button.btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
