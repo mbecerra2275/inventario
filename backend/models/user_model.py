@@ -13,7 +13,7 @@ class Usuario(Base):
     nombre = Column(String(100), nullable=False)
     correo = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    rol = Column(String(50), default="Bodeguero")  # Roles: Admin Central, Gestor de Sucursal, Bodeguero
+    rol = Column(String(50), default="Administrador")  # Roles: Administrador, contable, Bodeguero
     fecha_creacion = Column(DateTime, default=datetime.now)
 
     # ============================================================

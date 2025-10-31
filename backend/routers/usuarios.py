@@ -48,7 +48,7 @@ def registrar_usuario(
 # 🔐 LOGIN DE USUARIO
 # ============================================================
 @router.post("/login")
-def login(
+def login_usuario(
     correo: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
