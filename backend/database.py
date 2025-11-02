@@ -66,7 +66,7 @@ class Sucursal(Base):
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
     # Si luego deseas reactivar la relación con Producto:
-    # productos = relationship("Producto", backref="sucursal", lazy="joined")
+    #productos = relationship("Producto", backref="sucursal", lazy="joined")
 
 
 class Producto(Base):

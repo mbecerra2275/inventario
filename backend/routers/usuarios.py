@@ -4,10 +4,7 @@ from backend.database import get_db
 from backend.models.user_model import Usuario
 from backend.auth import crear_token
 
-router = APIRouter(
-    prefix="/usuarios",
-    tags=["Usuarios"]
-)
+router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
 # ============================================================
 # 🧩 REGISTRO DE NUEVO USUARIO

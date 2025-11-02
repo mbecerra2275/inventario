@@ -14,7 +14,7 @@ from typing import List, Optional
 from backend.database import get_db, Sucursal, Producto
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/sucursales", tags=["Sucursales"])
+router = APIRouter(prefix="/sucursales", tags=["Sucursales"])
 
 # ============================================================
 # 🧩 MODELOS Pydantic

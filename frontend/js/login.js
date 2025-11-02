@@ -1,7 +1,7 @@
 // =====================================================
 // 🔐 CONFIGURACIÓN DE LOGIN
 // =====================================================
-const API_URL = "http://127.0.0.1:8000/usuarios/login";
+const API_URL = "http://127.0.0.1:8000";
 
 // =====================================================
 // 🚪 EVENTO: Envío del formulario de login
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ correo, password }),

@@ -1,26 +1,30 @@
+# backend/routers/productos.py
 """
-==========================================
-Módulo: productos.py
+=========================================================
+Módulo: productos.py (v2)
 Autor: Milton Becerra
 Descripción:
-Rutas para CRUD de productos del inventario.
-==========================================
+CRUD completo de productos con relación a sucursales.
+=========================================================
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from backend.database import get_db, Producto
 
-router = APIRouter(prefix="/productos", tags=["Productos"])
+from backend.database import get_db, Producto, Sucursal
 
-# ============================================================
-# 📦 MODELOS Pydantic
-# ============================================================
-from pydantic import BaseModel
+router = APIRouter(
+    prefix="/productos",
+    tags=["Productos"]
+)
 
-class ProductoCreate(BaseModel):
+# ---------------------------------------------------------
+# 📦 Esquemas Pydantic
+# ---------------------------------------------------------
+class ProductoBase(BaseModel):
     nombre: str
     clasificacion: Optional[str] = None
     tipo_producto: Optional[str] = None
@@ -32,19 +36,22 @@ class ProductoCreate(BaseModel):
     cantidad: int
     sucursal_id: Optional[int] = None
 
-class ProductoResponse(ProductoCreate):
+
+class ProductoResponse(ProductoBase):
     id: int
     fecha_creacion: datetime
+
     class Config:
         from_attributes = True
 
-# ============================================================
+
+# ---------------------------------------------------------
 # 📡 ENDPOINTS
-# ============================================================
+# ---------------------------------------------------------
 
 @router.get("/", response_model=List[ProductoResponse])
-def obtener_productos(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
-    productos = db.query(Producto).offset(skip).limit(limit).all()
+def listar_productos(db: Session = Depends(get_db)):
+    productos = db.query(Producto).all()
     return productos
 
 
@@ -56,14 +63,15 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
     return producto
 
 
-@router.post("/", response_model=ProductoResponse)
-def crear_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
-    if producto.codigo_sku:
-        existe = db.query(Producto).filter(Producto.codigo_sku == producto.codigo_sku).first()
-        if existe:
-            raise HTTPException(status_code=400, detail="Ya existe un producto con ese código SKU")
+@router.post("/", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED)
+def crear_producto(data: ProductoBase, db: Session = Depends(get_db)):
+    # ✅ validar sucursal si viene
+    if data.sucursal_id:
+        suc = db.query(Sucursal).filter(Sucursal.id == data.sucursal_id).first()
+        if not suc:
+            raise HTTPException(status_code=400, detail="Sucursal no válida")
 
-    nuevo = Producto(**producto.dict())
+    nuevo = Producto(**data.dict())
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
@@ -71,17 +79,23 @@ def crear_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{producto_id}", response_model=ProductoResponse)
-def actualizar_producto(producto_id: int, producto: ProductoCreate, db: Session = Depends(get_db)):
-    producto_db = db.query(Producto).filter(Producto.id == producto_id).first()
-    if not producto_db:
+def actualizar_producto(producto_id: int, data: ProductoBase, db: Session = Depends(get_db)):
+    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    for attr, value in producto.dict().items():
-        setattr(producto_db, attr, value)
+    # si viene sucursal, validar
+    if data.sucursal_id:
+        suc = db.query(Sucursal).filter(Sucursal.id == data.sucursal_id).first()
+        if not suc:
+            raise HTTPException(status_code=400, detail="Sucursal no válida")
+
+    for key, value in data.dict().items():
+        setattr(producto, key, value)
 
     db.commit()
-    db.refresh(producto_db)
-    return producto_db
+    db.refresh(producto)
+    return producto
 
 
 @router.delete("/{producto_id}")
@@ -92,4 +106,4 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
 
     db.delete(producto)
     db.commit()
-    return {"mensaje": "Producto eliminado correctamente"}
+    return {"message": "Producto eliminado correctamente"}
