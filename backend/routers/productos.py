@@ -16,10 +16,7 @@ from datetime import datetime
 
 from backend.database import get_db, Producto, Sucursal
 
-router = APIRouter(
-    prefix="/productos",
-    tags=["Productos"]
-)
+router = APIRouter(prefix="/productos",tags=["Productos"])
 
 # ---------------------------------------------------------
 # 📦 Esquemas Pydantic

@@ -1,9 +1,8 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.database import init_db
 from backend.routers import usuarios, productos, sucursales
-
+from backend.database import init_db
 
 
 app = FastAPI(title="App de Inventario", version="2.0.1")
@@ -18,15 +17,14 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "http//127.0.0.1",
-        "http://localhost",
-
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET","POST","PUT","DELETE","OPTIONS"],
     allow_headers=["*"],
 )
-
+#===============================
+# Evento Starup 
+#===============================
 @app.on_event("startup")
 def startup():
     init_db()
