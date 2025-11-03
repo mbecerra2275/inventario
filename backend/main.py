@@ -6,7 +6,7 @@ from backend.routers import usuarios, productos, sucursales
 
 
 
-app = FastAPI(title="Sistema de Inventario", version="1.0.1")
+app = FastAPI(title="App de Inventario", version="2.0.1")
 app.router.redirect_slashes = False
 
 # ============================================================
