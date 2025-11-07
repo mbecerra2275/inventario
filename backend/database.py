@@ -83,10 +83,11 @@ class Producto(Base):
     marca = Column(String(100), nullable=True)
     precio = Column(Float, nullable=False)
     cantidad = Column(Integer, nullable=False)
-    fecha_creacion = Column(DateTime, default=datetime.now)
-
-    # Relación con sucursal
     sucursal_id = Column(Integer, ForeignKey("sucursales.id"), nullable=True)
+    fecha_creacion = Column(DateTime, default=datetime.now)
+    costo_neto_unitario = Column(Float, nullable=True)
+    costo_neto_total = Column(Float, nullable=True)
+    
 
 
 # ============================================================
