@@ -18,4 +18,4 @@ class SucursalOut(SucursalBase):
     fecha_creacion: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
