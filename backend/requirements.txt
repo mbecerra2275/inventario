@@ -1,0 +1,35 @@
+# =============================
+# 📦 Requerimientos del Backend
+# Proyecto: Sistema de Inventario Empresarial
+# Framework principal: FastAPI
+# Autor: Milton Becerra Contreras
+# =============================
+
+# --- Servidor y framework principal ---
+fastapi==0.115.0
+uvicorn==0.30.1
+gunicorn==21.2.0  # Para producción (multi-worker)
+
+# --- ORM y conexión a base de datos ---
+SQLAlchemy==2.0.23
+pymysql==1.1.0
+
+# --- Seguridad y autenticación JWT ---
+python-jose==3.3.0
+passlib==1.7.4
+
+# --- Validación de modelos ---
+pydantic==2.7.4
+pydantic-settings==2.2.1
+
+# --- CORS y utilidades web ---
+starlette==0.38.0
+python-multipart==0.0.9  # para formularios (uploads si los usas)
+
+# --- Variables de entorno ---
+python-dotenv==1.0.1
+
+# --- Herramientas opcionales ---
+requests==2.31.0
+alembic==1.13.1  # migraciones SQLAlchemy
+pytest==8.3.2     # pruebas unitarias

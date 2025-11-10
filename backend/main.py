@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import usuarios, productos, sucursales
+from backend.routers import usuarios, productos, sucursales, verificacion
 from backend.database import init_db
 
 
@@ -35,6 +35,8 @@ def startup():
 app.include_router(usuarios.router)
 app.include_router(productos.router)
 app.include_router(sucursales.router)
+app.include_router(verificacion.router)
+
 
 @app.get("/")
 def root():

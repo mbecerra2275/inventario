@@ -43,6 +43,11 @@
             <i class="bi bi-list"></i>
           </button>
           <h5 class="m-0 fw-bold text-success"><i class="bi bi-bar-chart"></i> Panel General</h5>
+          <div class="d-flex align-items-center">
+            <!-- Información del usuario -->
+             <div id="info-usuario" class="me-3 text-success fw-semibold small">
+              <!-- Se llenará dinámicamente -->
+              </div>
           <div>
             <a href="login.html" class="btn btn-sm btn-outline-danger">
               <i class="bi bi-box-arrow-right"></i> Cerrar sesión
@@ -119,7 +124,28 @@
       wrapper.classList.toggle("toggled");
     });
   </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+  const nombre = localStorage.getItem("nombre");
+  const rol = localStorage.getItem("rol");
+  const infoUsuario = document.getElementById("info-usuario");
+
+  if (nombre && rol && infoUsuario) {
+    infoUsuario.innerHTML = `👤 <strong>${nombre}</strong> | <span class="text-muted">${rol}</span>`;
+  }
+
+  // Botón de cerrar sesión
+  const logoutBtn = document.getElementById("logout");
+  logoutBtn.addEventListener("click", () => {
+    localStorage.clear();
+    window.location.href = "login.html";
+  });
+});
+</script>
 
   <script src="js/dashboard.js"></script>
+  <script src="js/auth.js"></script>
+
 </body>
 </html>
+
