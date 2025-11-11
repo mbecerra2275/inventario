@@ -16,6 +16,7 @@ class ProductoBase(BaseModel):
     sucursal_id: Optional[int] = None
     costo_neto_unitario: Optional[float] = None  # ✅ cambio aquí
     costo_neto_total: Optional[float] = None     # ✅ y aquí
+    doc_recepcion_ing: Optional[str] = None
 
 class ProductoCreate(ProductoBase):
     pass

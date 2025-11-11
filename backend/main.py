@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import usuarios, productos, sucursales, verificacion
+from backend.routers import usuarios, productos, sucursales, verificacion, informes
 from backend.database import init_db
 
 
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET","POST","PUT","DELETE","OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 #===============================
 # Evento Starup 
@@ -36,6 +37,7 @@ app.include_router(usuarios.router)
 app.include_router(productos.router)
 app.include_router(sucursales.router)
 app.include_router(verificacion.router)
+app.include_router(informes.router)
 
 
 @app.get("/")

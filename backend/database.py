@@ -87,6 +87,7 @@ class Producto(Base):
     fecha_creacion = Column(DateTime, default=datetime.now)
     costo_neto_unitario = Column(Float, nullable=True)
     costo_neto_total = Column(Float, nullable=True)
+    doc_recepcion_ing = Column(String(50), nullable=True)# 🔹 Nuevo campo
     
 
 

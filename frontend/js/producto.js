@@ -39,7 +39,7 @@ async function crearFormulario() {
     form.innerHTML = "";
 
     // excluimos solo id y fecha
-    const excluir = ["id", "fecha_creacion"];
+    const excluir = ["id", "fecha_creacion","impuestos"];
 
     columnas.forEach(col => {
       if (excluir.includes(col.name)) return;
