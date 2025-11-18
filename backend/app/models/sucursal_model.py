@@ -7,7 +7,7 @@ class Sucursal(Base):
     __tablename__ = "sucursales"
     __table_args__ = {"extend_existing": True}  # Evita conflicto si ya está registrada
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True) 
     nombre = Column(String(100), nullable=False, unique=True)
     direccion = Column(String(200), nullable=True)
     ciudad = Column(String(100), nullable=True)

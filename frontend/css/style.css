@@ -187,3 +187,46 @@ button.btn-warning:hover {
     margin-bottom: 0.5rem;
   }
 }
+/* Tarjetas modernas */
+.dashboard-card {
+  transition: 0.3s ease;
+  background: var(--card-bg, #fff);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.icon-dashboard {
+  font-size: 2.8rem;
+  color: #198754;
+}
+
+/* Dark mode */
+:root {
+  --card-bg: #ffffff;
+  --body-bg: #f5f5f5;
+  --text-color: #000;
+}
+
+.dark-mode {
+  --card-bg: #1f1f1f;
+  --body-bg: #121212;
+  --text-color: #e8e8e8;
+}
+
+body.dark-mode {
+  background: var(--body-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-mode .card {
+  background: var(--card-bg) !important;
+}
+
+#chartCategorias {
+  max-width: 450px !important;
+  max-height: 450px !important;
+  margin: auto;
+}

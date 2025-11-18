@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import usuarios, productos, sucursales, informes, verificacion
 from app.database.connection import init_db  # 👈 mantiene la lógica original
 from app.auth.auth import router as auth_router
+from app.routers.dashboard import router as dashboard_router
 
 # ============================================================
 # 🚀 Configuración base de la aplicación
@@ -43,6 +44,8 @@ app.include_router(sucursales.router)
 app.include_router(verificacion.router)
 app.include_router(informes.router)
 app.include_router(auth_router)
+app.include_router(dashboard_router)
+
 
 # ============================================================
 # 🏁 Endpoint raíz

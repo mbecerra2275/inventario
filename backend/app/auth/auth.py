@@ -17,7 +17,7 @@ load_dotenv()
 # Clave secreta y algoritmo
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 480))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 # Validar que la clave exista al iniciar
 if not SECRET_KEY or SECRET_KEY.strip() == "":

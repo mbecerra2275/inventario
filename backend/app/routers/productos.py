@@ -1,16 +1,19 @@
+# ============================================================
+# ROUTER DE PRODUCTOS 100% COMPATIBLE CON TU FRONTEND
+# SIN Pydantic (ProductoCreate/ProductoOut) porque tu frontend
+# trabaja enviando JSON directo con producto.js
+# ============================================================
+
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy import inspect
 from sqlalchemy.orm import Session
-from typing import List
-from app.database.connection import SessionLocal, engine
+
+from app.database.connection import SessionLocal
 from app.models.producto_model import Producto
-
-
-from app.schemas.producto_schema import ProductoCreate, ProductoOut
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
-# Dependencia de DB
+
+# ------------------------------ DB ------------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -19,58 +22,74 @@ def get_db():
         db.close()
 
 
-# ---------- LISTAR PRODUCTOS ----------
-@router.get("/", response_model=List[ProductoOut])
-def listar_productos(db: Session = Depends(get_db)):
+# ------------------------------ SCHEMA (Formulario dinámico) ------------------------------
+@router.get("/schema")
+def obtener_schema(db: Session = Depends(get_db)):
+    columnas = []
+    for col in Producto.__table__.columns:
+        columnas.append({
+            "name": col.name,
+            "type": str(col.type)
+        })
+    return columnas
+
+
+# ------------------------------ LISTAR PRODUCTOS ------------------------------
+@router.get("/")
+def obtener_productos(db: Session = Depends(get_db)):
     productos = db.query(Producto).all()
     return productos
 
 
-# ---------- CREAR NUEVO PRODUCTO ----------
-@router.post("/", response_model=ProductoOut)
-def crear_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
-    nuevo = Producto(**producto.dict())
+# ------------------------------ PRODUCTOS RECIENTES ------------------------------
+@router.get("/recientes")
+def productos_recientes(limit: int = 5, db: Session = Depends(get_db)):
+    productos = (
+        db.query(Producto)
+        .order_by(Producto.fecha_creacion.desc())
+        .limit(limit)
+        .all()
+    )
+    return productos
+
+
+# ------------------------------ CREAR PRODUCTO ------------------------------
+@router.post("/")
+def crear_producto(data: dict, db: Session = Depends(get_db)):
+    nuevo = Producto(**data)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
     return nuevo
 
 
-# ---------- ACTUALIZAR PRODUCTO ----------
-@router.put("/{producto_id}", response_model=ProductoOut)
-def actualizar_producto(producto_id: int, datos: ProductoCreate, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+# ------------------------------ EDITAR PRODUCTO ------------------------------
+@router.put("/{id}")
+def actualizar_producto(id: int, data: dict, db: Session = Depends(get_db)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    for campo, valor in datos.dict().items():
-        setattr(producto, campo, valor)
+    for key, value in data.items():
+        setattr(producto, key, value)
+
     db.commit()
     db.refresh(producto)
     return producto
 
 
-# ---------- ELIMINAR PRODUCTO ----------
-@router.delete("/{producto_id}")
-def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+# ------------------------------ ELIMINAR PRODUCTO ------------------------------
+@router.delete("/{id}")
+def eliminar_producto(id: int, db: Session = Depends(get_db)):
+    producto = db.query(Producto).filter(Producto.id == id).first()
+
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
+
     db.delete(producto)
     db.commit()
-    return {"mensaje": "Producto eliminado correctamente"}
+
+    return {"message": "Producto eliminado correctamente"}
 
 
-# ---------- OBTENER ESQUEMA DE TABLA ----------
-@router.get("/schema")
-def obtener_esquema_productos():
-    insp = inspect(engine)
-    columnas = []
-    for col in insp.get_columns("productos"):
-        columnas.append({
-            "name": col["name"],
-            "type": str(col["type"]),
-            "nullable": col["nullable"],
-            "default": col["default"]
-        })
-    return columnas

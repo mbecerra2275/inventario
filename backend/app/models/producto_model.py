@@ -8,7 +8,7 @@ class Producto(Base):
     __tablename__ = "productos"
     __table_args__ = {"extend_existing": True}
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     nombre = Column(String(100), nullable=False)
     clasificacion = Column(String(100))
     tipo_producto = Column(String(100))
