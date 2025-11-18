@@ -3,10 +3,10 @@ const API_SUCURSALES = "http://127.0.0.1:8000/sucursales/";
 
 let editando = false;
 let idProductoEditando = null;
-let sucursalesMap = {}; // para almacenar los nombres de sucursales por ID
+let sucursalesMap = {}; 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await cargarSucursales();  // cargamos nombres de sucursales primero
+  await cargarSucursales();  
   crearFormulario();
   cargarProductos();
 });
@@ -25,7 +25,6 @@ async function cargarSucursales() {
     sucursales.forEach(s => {
       sucursalesMap[s.id] = s.nombre || `Sucursal ${s.id}`;
     });
-    console.log("Sucursales cargadas:", sucursalesMap);
   } catch (err) {
     console.warn("⚠️ No se pudieron cargar las sucursales:", err);
   }
@@ -59,9 +58,7 @@ async function crearFormulario() {
           <label for="sucursal_id" class="form-label">Sucursal</label>
           <select class="form-select" id="sucursal_id" name="sucursal_id">
             <option value="">Seleccione sucursal...</option>
-            ${Object.entries(sucursalesMap)
-              .map(([id, nombre]) => `<option value="${id}">${nombre}</option>`)
-              .join("")}
+            ${Object.entries(sucursalesMap).map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join("")}
           </select>
         `;
         form.appendChild(div);
@@ -77,14 +74,12 @@ async function crearFormulario() {
       div.classList.add("col-md-4");
       div.innerHTML = `
         <label for="${col.name}" class="form-label text-capitalize">${col.name.replace(/_/g, " ")}</label>
-        <input type="${tipo}" class="form-control" id="${col.name}" name="${col.name}" ${
-        tipo === "number" ? 'step="any"' : ""
-      }>
+        <input type="${tipo}" class="form-control" id="${col.name}" name="${col.name}" ${tipo === "number" ? 'step="any"' : ""}>
       `;
       form.appendChild(div);
     });
 
-    // botón guardar/actualizar
+    // botón guardar
     const divBoton = document.createElement("div");
     divBoton.classList.add("col-12", "text-end");
     divBoton.innerHTML = `
@@ -94,7 +89,6 @@ async function crearFormulario() {
     `;
     form.appendChild(divBoton);
 
-    // evento submit
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (editando) {
@@ -118,10 +112,8 @@ function obtenerDatosFormulario() {
     if (!el.id) return;
     let valor = el.value.trim();
 
-    // si está vacío, no se envía
     if (valor === "") return;
 
-    // convertir números
     if (el.type === "number" || el.tagName === "SELECT") {
       valor = parseFloat(valor);
       if (isNaN(valor)) return;
@@ -130,12 +122,17 @@ function obtenerDatosFormulario() {
     datos[el.id] = valor;
   });
 
-  console.log("Datos enviados al backend:", datos);
   return datos;
 }
 
 // ---------- GUARDAR NUEVO PRODUCTO ----------
 async function guardarProducto() {
+  const rol = localStorage.getItem("rol");
+  if (rol === "sucursal") {
+    alert("❌ No tienes permisos para crear productos.");
+    return;
+  }
+
   const producto = obtenerDatosFormulario();
 
   try {
@@ -212,13 +209,12 @@ async function cargarProductos() {
         row.innerHTML += `<td>${valor}</td>`;
       });
 
-      // ACCIONES
       row.innerHTML += `
         <td>
-          <button class="btn btn-sm btn-warning me-1" onclick="cargarParaEditar(${p.id})">
+          <button class="btn btn-sm btn-warning me-1 btn-editar" onclick="cargarParaEditar(${p.id})">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="btn btn-sm btn-danger" onclick="eliminarProducto(${p.id})">
+          <button class="btn btn-sm btn-danger btn-eliminar" onclick="eliminarProducto(${p.id})">
             <i class="bi bi-trash"></i>
           </button>
         </td>`;
@@ -232,6 +228,12 @@ async function cargarProductos() {
 
 // ---------- CARGAR PRODUCTO EN FORMULARIO ----------
 async function cargarParaEditar(id) {
+  const rol = localStorage.getItem("rol");
+  if (rol !== "admin") {
+    alert("❌ Solo el administrador puede editar productos.");
+    return;
+  }
+
   try {
     const res = await fetch(API_URL, {
       headers: {
@@ -264,6 +266,12 @@ async function cargarParaEditar(id) {
 
 // ---------- ACTUALIZAR PRODUCTO ----------
 async function actualizarProducto() {
+  const rol = localStorage.getItem("rol");
+  if (rol !== "admin") {
+    alert("❌ No tienes permisos para actualizar productos.");
+    return;
+  }
+
   const datos = obtenerDatosFormulario();
 
   try {
@@ -289,6 +297,12 @@ async function actualizarProducto() {
 
 // ---------- ELIMINAR PRODUCTO ----------
 async function eliminarProducto(id) {
+  const rol = localStorage.getItem("rol");
+  if (rol !== "admin") {
+    alert("❌ Solo el administrador puede eliminar productos.");
+    return;
+  }
+
   if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
 
   try {

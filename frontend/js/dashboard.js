@@ -192,3 +192,12 @@ function formatearFecha(fecha) {
   if (!fecha) return "—";
   return new Date(fecha).toLocaleDateString("es-CL");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const rol = localStorage.getItem("rol");
+
+  if (rol !== "admin") {
+    const card = document.querySelector('#tabla-sucursales')?.closest('.card');
+    if (card) card.style.display = "none";
+  }
+});
