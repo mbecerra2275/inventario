@@ -14,7 +14,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ---------- CARGAR SUCURSALES ----------
 async function cargarSucursales() {
   try {
-    const res = await fetch(API_SUCURSALES);
+    const res = await fetch(API_SUCURSALES, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
     if (!res.ok) throw new Error("Error al obtener sucursales");
     const sucursales = await res.json();
     sucursalesMap = {};
@@ -33,12 +37,15 @@ async function crearFormulario() {
   if (!form) return;
 
   try {
-    const res = await fetch(API_URL + "schema");
-    const columnas = await res.json();
+    const res = await fetch(API_URL + "schema", {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
 
+    const columnas = await res.json();
     form.innerHTML = "";
 
-    // excluimos solo id y fecha
     const excluir = ["id", "fecha_creacion"];
 
     columnas.forEach(col => {
@@ -134,7 +141,10 @@ async function guardarProducto() {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
       body: JSON.stringify(producto)
     });
     if (!res.ok) throw new Error("Error al guardar producto");
@@ -156,8 +166,16 @@ async function cargarProductos() {
 
   try {
     const [colsRes, prodRes] = await Promise.all([
-      fetch(API_URL + "schema"),
-      fetch(API_URL)
+      fetch(API_URL + "schema", {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      }),
+      fetch(API_URL, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      })
     ]);
 
     const columnas = await colsRes.json();
@@ -177,7 +195,6 @@ async function cargarProductos() {
       visibles.forEach(c => {
         let valor = p[c.name];
 
-        // sucursal_id -> mostrar nombre
         if (c.name === "sucursal_id") {
           valor = sucursalesMap[p[c.name]] || "—";
         }
@@ -195,6 +212,7 @@ async function cargarProductos() {
         row.innerHTML += `<td>${valor}</td>`;
       });
 
+      // ACCIONES
       row.innerHTML += `
         <td>
           <button class="btn btn-sm btn-warning me-1" onclick="cargarParaEditar(${p.id})">
@@ -215,7 +233,11 @@ async function cargarProductos() {
 // ---------- CARGAR PRODUCTO EN FORMULARIO ----------
 async function cargarParaEditar(id) {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
     const productos = await res.json();
     const producto = productos.find(p => p.id === id);
     if (!producto) return alert("❌ Producto no encontrado");
@@ -247,7 +269,10 @@ async function actualizarProducto() {
   try {
     const res = await fetch(API_URL + idProductoEditando, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
       body: JSON.stringify(datos)
     });
     if (!res.ok) throw new Error("Error al actualizar producto");
@@ -267,7 +292,12 @@ async function eliminarProducto(id) {
   if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
 
   try {
-    const res = await fetch(API_URL + id, { method: "DELETE" });
+    const res = await fetch(API_URL + id, { 
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
     if (!res.ok) throw new Error("Error al eliminar producto");
 
     alert("🗑️ Producto eliminado correctamente");

@@ -1,7 +1,6 @@
 # ============================================================
 # ROUTER DE PRODUCTOS 100% COMPATIBLE CON TU FRONTEND
-# SIN Pydantic (ProductoCreate/ProductoOut) porque tu frontend
-# trabaja enviando JSON directo con producto.js
+# Ahora con restricción de roles
 # ============================================================
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -9,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import SessionLocal
 from app.models.producto_model import Producto
+from app.auth.auth import rol_requerido   # ⬅️ IMPORTANTE: importar la autorización
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
@@ -22,8 +22,11 @@ def get_db():
         db.close()
 
 
-# ------------------------------ SCHEMA (Formulario dinámico) ------------------------------
-@router.get("/schema")
+# ------------------------------ SCHEMA (ACCESO: todos) ------------------------------
+@router.get(
+    "/schema",
+    dependencies=[Depends(rol_requerido(["admin", "bodega", "sucursal"]))]
+)
 def obtener_schema(db: Session = Depends(get_db)):
     columnas = []
     for col in Producto.__table__.columns:
@@ -34,15 +37,21 @@ def obtener_schema(db: Session = Depends(get_db)):
     return columnas
 
 
-# ------------------------------ LISTAR PRODUCTOS ------------------------------
-@router.get("/")
+# ------------------------------ LISTAR PRODUCTOS (ACCESO: todos) ------------------------------
+@router.get(
+    "/", 
+    dependencies=[Depends(rol_requerido(["admin", "bodega", "sucursal"]))]
+)
 def obtener_productos(db: Session = Depends(get_db)):
     productos = db.query(Producto).all()
     return productos
 
 
-# ------------------------------ PRODUCTOS RECIENTES ------------------------------
-@router.get("/recientes")
+# ------------------------------ PRODUCTOS RECIENTES (ACCESO: todos) ------------------------------
+@router.get(
+    "/recientes",
+    dependencies=[Depends(rol_requerido(["admin", "bodega", "sucursal"]))]
+)
 def productos_recientes(limit: int = 5, db: Session = Depends(get_db)):
     productos = (
         db.query(Producto)
@@ -53,8 +62,11 @@ def productos_recientes(limit: int = 5, db: Session = Depends(get_db)):
     return productos
 
 
-# ------------------------------ CREAR PRODUCTO ------------------------------
-@router.post("/")
+# ------------------------------ CREAR PRODUCTO (ACCESO: admin, bodega) ------------------------------
+@router.post(
+    "/",
+    dependencies=[Depends(rol_requerido(["admin", "bodega"]))]
+)
 def crear_producto(data: dict, db: Session = Depends(get_db)):
     nuevo = Producto(**data)
     db.add(nuevo)
@@ -63,8 +75,11 @@ def crear_producto(data: dict, db: Session = Depends(get_db)):
     return nuevo
 
 
-# ------------------------------ EDITAR PRODUCTO ------------------------------
-@router.put("/{id}")
+# ------------------------------ EDITAR PRODUCTO (ACCESO: SOLO admin) ------------------------------
+@router.put(
+    "/{id}",
+    dependencies=[Depends(rol_requerido(["admin"]))]
+)
 def actualizar_producto(id: int, data: dict, db: Session = Depends(get_db)):
     producto = db.query(Producto).filter(Producto.id == id).first()
 
@@ -79,8 +94,11 @@ def actualizar_producto(id: int, data: dict, db: Session = Depends(get_db)):
     return producto
 
 
-# ------------------------------ ELIMINAR PRODUCTO ------------------------------
-@router.delete("/{id}")
+# ------------------------------ ELIMINAR PRODUCTO (ACCESO: SOLO admin) ------------------------------
+@router.delete(
+    "/{id}",
+    dependencies=[Depends(rol_requerido(["admin"]))]
+)
 def eliminar_producto(id: int, db: Session = Depends(get_db)):
     producto = db.query(Producto).filter(Producto.id == id).first()
 
@@ -91,5 +109,3 @@ def eliminar_producto(id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Producto eliminado correctamente"}
-
-
