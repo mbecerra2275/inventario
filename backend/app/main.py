@@ -4,6 +4,7 @@ from app.routers import usuarios, productos, sucursales, informes, verificacion
 from app.database.connection import init_db  # 👈 mantiene la lógica original
 from app.auth.auth import router as auth_router
 from app.routers.dashboard import router as dashboard_router
+from app.routers import logs
 
 # ============================================================
 # 🚀 Configuración base de la aplicación
@@ -16,10 +17,7 @@ app.router.redirect_slashes = False
 # ============================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-    ],
+    allow_origins=["*"],  # Permitir todas las fuentes (orígenes)
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -45,6 +43,7 @@ app.include_router(verificacion.router)
 app.include_router(informes.router)
 app.include_router(auth_router)
 app.include_router(dashboard_router)
+app.include_router(logs.router)
 
 
 # ============================================================

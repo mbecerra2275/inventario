@@ -1,87 +1,82 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Informes y Plantillas - Sistema de Inventario</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      rel="stylesheet"
-    />
-  </head>
-  <body class="bg-light">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+</head>
+
+<body class="bg-light">
+
     <!-- Barra superior -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">
-          <i class="bi bi-box-seam"></i> Sistema de Inventario
-        </a>
-        <div class="d-flex">
-          <a href="index.html" class="btn btn-outline-light me-2">
-            <i class="bi bi-house-door"></i> Inicio
-          </a>
-          <a href="login.html" class="btn btn-outline-light">
-            <i class="bi bi-box-arrow-right"></i> Salir
-          </a>
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="bi bi-box-seam"></i> Sistema de Inventario
+            </a>
+            <div class="d-flex">
+                <a href="index.html" class="btn btn-outline-light me-2">
+                    <i class="bi bi-house-door"></i> Inicio
+                </a>
+                <a href="login.html" class="btn btn-outline-light">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </a>
+            </div>
         </div>
-      </div>
     </nav>
 
     <main class="container py-5">
-      <h2 class="mb-4 text-success">
-        <i class="bi bi-file-earmark-spreadsheet"></i> Informes y Plantillas
-      </h2>
 
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5 class="card-title text-success">📤 Descargar plantillas</h5>
-          <p class="text-muted">
-            Descarga una plantilla CSV o TXT con los productos actuales.
-          </p>
-          <button id="btnExportCSV" class="btn btn-success me-2">
-            <i class="bi bi-file-earmark-arrow-down"></i> Descargar CSV
-          </button>
-          <button id="btnExportTXT" class="btn btn-outline-success">
-            <i class="bi bi-file-earmark-text"></i> Descargar TXT
-          </button>
+        <h2 class="mb-4 text-success">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Informes y Plantillas
+        </h2>
+
+        <!-- EXPORTAR -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">📤 Descargar plantillas</h5>
+                <p class="text-muted">Descarga una plantilla CSV o TXT con los productos actuales.</p>
+
+                <button id="btnExportCSV" class="btn btn-success me-2">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Descargar CSV
+                </button>
+
+                <button id="btnExportTXT" class="btn btn-outline-success">
+                    <i class="bi bi-file-earmark-text"></i> Descargar TXT
+                </button>
+            </div>
         </div>
-      </div>
 
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title text-success">
-            📥 Importar productos desde plantilla
-          </h5>
-          <p class="text-muted">
-            Selecciona un archivo CSV con los productos para cargar
-            automáticamente.
-          </p>
-          <input
-            type="file"
-            id="inputFile"
-            accept=".csv"
-            class="form-control mb-3"
-          />
-          <button id="btnImport" class="btn btn-success">
-            <i class="bi bi-upload"></i> Importar CSV
-          </button>
+        <!-- IMPORTAR -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-success">📥 Importar productos desde plantilla Excel/CSV</h5>
+
+                <input type="file" id="inputFile" accept=".csv,.xlsx" class="form-control mb-3"/>
+
+                <button id="btnImport" class="btn btn-success">
+                    <i class="bi bi-upload"></i> Importar Archivo
+                </button>
+
+                <div id="alertasInformes" class="mt-3"></div>
+            </div>
         </div>
-      </div>
 
-      <div id="resultado" class="mt-4"></div>
     </main>
 
-    <script src="js/informes.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- SCRIPTS -->
+    <script src="js/informes.js" defer></script>
+    <script src="js/auth.js" defer></script>
+
     <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        await validarSesion();
-        protegerPagina(["admin", "bodega", "sucursal"]);
-      });
+        document.addEventListener("DOMContentLoaded", async () => {
+            await validarSesion();
+            protegerPagina(["admin", "bodega", "sucursal"]);
+        });
     </script>
-  </body>
+
+</body>
 </html>

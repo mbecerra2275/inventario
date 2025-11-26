@@ -11,6 +11,8 @@ from typing import Optional
 
 from app.database.connection import get_db
 from app.models.user_model import Usuario
+from fastapi import Request, BackgroundTasks
+from app.utils.logs import registrar_log
 from app.auth.auth import crear_token, verificar_token
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
@@ -132,39 +134,49 @@ def oauth2_token(
 # =========================
 @router.post("/login")
 def login_usuario(
+    request: Request,
+    background_tasks: BackgroundTasks,
     correo: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     usuario = db.query(Usuario).filter(Usuario.correo == correo).first()
+
+    # -------- LOGIN FALLIDO --------
     if not usuario or not usuario.verificar_password(password):
+        background_tasks.add_task(
+            registrar_log,
+            db=db,
+            usuario_id=None,
+            evento="login_fallido",
+            request=request,
+            detalle=f"correo={correo}"
+        )
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
+    # -------- LOGIN EXITOSO --------
     token = crear_token({
         "id": usuario.id,
         "sub": usuario.correo,
-        "rol": usuario.rol.lower(),      # 🔥 importantísimo
+        "rol": usuario.rol,
         "nombre": usuario.nombre
     })
+
+    background_tasks.add_task(
+        registrar_log,
+        db=db,
+        usuario_id=usuario.id,
+        evento="login_exitoso",
+        request=request,
+        detalle=None
+    )
 
     return {
         "access_token": token,
         "token_type": "bearer",
-        "rol": usuario.rol.lower(),      # 🔥 importantísimo
+        "rol": usuario.rol,
         "nombre": usuario.nombre
     }
-
-
-# =========================
-# Listar usuarios (pruebas)
-# =========================
-@router.get("/listar")
-def listar_usuarios(db: Session = Depends(get_db)):
-    usuarios = db.query(Usuario).all()
-    return [
-        {"id": u.id, "nombre": u.nombre, "correo": u.correo, "rol": u.rol}
-        for u in usuarios
-    ]
 
 
 # =========================

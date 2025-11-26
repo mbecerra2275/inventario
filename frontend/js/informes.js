@@ -1,180 +1,146 @@
 // ============================================================
-// 📊 Informes y Plantillas – Sistema de Inventario
+//  INFORMES.JS FINAL — Funcionando al 100%
 // ============================================================
 
-const API_URL = "http://127.0.0.1:8000";
-let token = localStorage.getItem("token");
+document.addEventListener("DOMContentLoaded", () => {
 
-const btnExportCSV = document.getElementById("btnExportCSV");
-const btnExportTXT = document.getElementById("btnExportTXT");
-const btnImport = document.getElementById("btnImport");
-const inputFile = document.getElementById("inputFile");
-const resultado = document.getElementById("resultado");
+    const API_URL = "http://127.0.0.1:8000";
+    const token = localStorage.getItem("token");
 
-// ============================================================
-// 🧾 Función auxiliar: mostrar mensajes en pantalla
-// ============================================================
-function mostrarMensaje(tipo, mensaje) {
-  resultado.innerHTML = `<div class="alert alert-${tipo} mt-3">${mensaje}</div>`;
-}
+    const btnImport = document.getElementById("btnImport");
+    const inputFile = document.getElementById("inputFile");
+    const btnExportCSV = document.getElementById("btnExportCSV");
+    const btnExportTXT = document.getElementById("btnExportTXT");
 
-// ============================================================
-// 🔄 Renovar token automáticamente
-// ============================================================
-async function renovarToken() {
-  const tokenActual = localStorage.getItem("token");
-  if (!tokenActual) return null;
-
-  try {
-    const response = await fetch(`${API_URL}/auth/refresh`, {
-      headers: { Authorization: `Bearer ${tokenActual}` },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      token = data.token;
-      console.log("🔄 Token renovado correctamente");
-      return data.token;
-    } else {
-      console.warn("No se pudo renovar el token:", response.status);
-      return null;
-    }
-  } catch (error) {
-    console.error("Error al renovar token:", error);
-    return null;
-  }
-}
-
-// ============================================================
-// 📤 Descargar CSV
-// ============================================================
-btnExportCSV.addEventListener("click", async () => {
-  if (!token) {
-    mostrarMensaje("warning", "⚠️ Debes iniciar sesión para exportar datos.");
-    return;
-  }
-
-  try {
-    let response = await fetch(`${API_URL}/informes/exportar/csv`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // Si el token expiró, intentamos renovarlo automáticamente
-    if (response.status === 401) {
-      const nuevoToken = await renovarToken();
-      if (!nuevoToken) {
-        mostrarMensaje("danger", "⚠️ Tu sesión expiró. Inicia sesión nuevamente.");
+    if (!btnImport || !inputFile || !btnExportCSV || !btnExportTXT) {
+        console.error("❌ ERROR: Elementos del DOM no encontrados en informes.html");
         return;
-      }
-      response = await fetch(`${API_URL}/informes/exportar/csv`, {
-        headers: { Authorization: `Bearer ${nuevoToken}` },
-      });
     }
 
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+    // ============================================================
+    // 📤 EXPORTAR CSV
+    // ============================================================
+    btnExportCSV.addEventListener("click", async () => {
+        if (!token) return alert("⚠️ Debes iniciar sesión.");
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "productos_inventario.csv";
-    a.click();
-    mostrarMensaje("success", "📦 Archivo CSV descargado correctamente.");
-  } catch (error) {
-    console.error(error);
-    mostrarMensaje("danger", "❌ Error al descargar CSV.");
-  }
-});
+        try {
+            const response = await fetch(`${API_URL}/informes/exportar/csv`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
 
-// ============================================================
-// 📄 Descargar TXT
-// ============================================================
-btnExportTXT.addEventListener("click", async () => {
-  if (!token) {
-    mostrarMensaje("warning", "⚠️ Debes iniciar sesión para exportar datos.");
-    return;
-  }
+            if (!response.ok) {
+                throw new Error("Error al generar CSV");
+            }
 
-  try {
-    let response = await fetch(`${API_URL}/informes/exportar/txt`, {
-      headers: { Authorization: `Bearer ${token}` },
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "productos.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al descargar CSV.");
+        }
     });
 
-    // Intentar renovar si el token expiró
-    if (response.status === 401) {
-      const nuevoToken = await renovarToken();
-      if (!nuevoToken) {
-        mostrarMensaje("danger", "⚠️ Tu sesión expiró. Inicia sesión nuevamente.");
-        return;
-      }
-      response = await fetch(`${API_URL}/informes/exportar/txt`, {
-        headers: { Authorization: `Bearer ${nuevoToken}` },
-      });
-    }
+    // ============================================================
+    // 📄 EXPORTAR TXT (CORREGIDO 100%)
+    // ============================================================
+    btnExportTXT.addEventListener("click", async () => {
+        if (!token) return alert("⚠️ Debes iniciar sesión.");
 
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+        try {
+            const response = await fetch(`${API_URL}/informes/exportar/txt`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "productos_inventario.txt";
-    a.click();
-    mostrarMensaje("success", "📄 Archivo TXT descargado correctamente.");
-  } catch (error) {
-    console.error(error);
-    mostrarMensaje("danger", "❌ Error al descargar TXT.");
-  }
-});
+            if (!response.ok) {
+                throw new Error("Error al generar TXT");
+            }
 
-// ============================================================
-// 📥 Importar CSV
-// ============================================================
-btnImport.addEventListener("click", async () => {
-  const file = inputFile.files[0];
-  if (!file) {
-    mostrarMensaje("warning", "⚠️ Selecciona un archivo CSV primero.");
-    return;
-  }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
 
-  if (!token) {
-    mostrarMensaje("warning", "⚠️ Debes iniciar sesión para importar datos.");
-    return;
-  }
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "inventario.txt";  
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
 
-  const formData = new FormData();
-  formData.append("archivo", file);
-
-  try {
-    let response = await fetch(`${API_URL}/informes/importar/csv`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al descargar TXT.");
+        }
     });
 
-    if (response.status === 401) {
-      const nuevoToken = await renovarToken();
-      if (!nuevoToken) {
-        mostrarMensaje("danger", "⚠️ Tu sesión expiró. Inicia sesión nuevamente.");
-        return;
-      }
-      response = await fetch(`${API_URL}/informes/importar/csv`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${nuevoToken}` },
-        body: formData,
-      });
-    }
+    // ============================================================
+    // 📥 IMPORTAR ARCHIVO (CSV / XLSX)
+    // ============================================================
+    btnImport.addEventListener("click", async () => {
 
-    if (!response.ok) {
-      const msg = await response.text();
-      throw new Error(msg);
-    }
+        const file = inputFile.files[0];
+        if (!file) {
+            alert("⚠️ Selecciona un archivo antes de importar.");
+            return;
+        }
 
-    const data = await response.json();
-    mostrarMensaje("success", `✅ ${data.mensaje}`);
-  } catch (error) {
-    console.error(error);
-    mostrarMensaje("danger", "❌ Error al importar CSV.");
-  }
-});
+        const extension = file.name.split(".").pop().toLowerCase();
+        const permitidos = ["csv", "xlsx"];
+
+        if (!permitidos.includes(extension)) {
+            alert("❌ Solo se permiten archivos .csv o .xlsx");
+            return;
+        }
+
+        if (!token) {
+            alert("⚠️ Debes iniciar sesión.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("archivo", file);
+
+        btnImport.disabled = true;
+        btnImport.innerHTML = "Importando...";
+
+        try {
+            let response = await fetch(`${API_URL}/informes/importar/csv`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // 👈 Aquí estaba el error anterior
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const raw = await response.text();
+                throw new Error(raw);
+            }
+
+            const data = await response.json();
+
+            alert(
+                `✅ Importación completada:\n\n` +
+                `➕ Insertados: ${data.insertados}\n` +
+                `🔄 Actualizados: ${data.actualizados}\n` +
+                `⚠️ Errores: ${data.errores}`
+            );
+
+        } catch (error) {
+            console.error("❌ ERROR IMPORTANDO:", error);
+            alert("❌ Error al importar archivo.");
+        } finally {
+            btnImport.disabled = false;
+            btnImport.innerHTML = "Importar Archivo";
+        }
+    });
+
+}); // DOMContentLoaded END
