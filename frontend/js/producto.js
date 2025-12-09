@@ -1,335 +1,239 @@
-const API_URL = "http://127.0.0.1:8000/productos/";
-const API_SUCURSALES = "http://127.0.0.1:8000/sucursales/";
+/* ============================================================
+   📦 PRODUCTOS.JS — VERSIÓN OPTIMIZADA, DOCUMENTADA Y ORDENADA
+   Autor: Milton Becerra
+   Fecha: 2025
+   ============================================================ */
 
-let editando = false;
-let idProductoEditando = null;
-let sucursalesMap = {}; 
+/* ============================================================
+   🔧 CONFIGURACIÓN INICIAL
+   ============================================================ */
+const API_URL = "http://127.0.0.1:8000";
+const token = localStorage.getItem("token");
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await cargarSucursales();  
-  crearFormulario();
-  cargarProductos();
-});
+// Selectores principales
+const tabla = document.getElementById("tabla-productos");
+const formProducto = document.getElementById("form-producto");
 
-// ---------- CARGAR SUCURSALES ----------
-async function cargarSucursales() {
-  try {
-    const res = await fetch(API_SUCURSALES, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-    if (!res.ok) throw new Error("Error al obtener sucursales");
-    const sucursales = await res.json();
-    sucursalesMap = {};
-    sucursales.forEach(s => {
-      sucursalesMap[s.id] = s.nombre || `Sucursal ${s.id}`;
-    });
-  } catch (err) {
-    console.warn("⚠️ No se pudieron cargar las sucursales:", err);
-  }
+/* ============================================================
+   💰 FORMATEAR MONEDA (PESO CHILENO)
+   ============================================================ */
+function formatearCLP(valor) {
+    if (isNaN(valor)) return "$0";
+    return new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        minimumFractionDigits: 0,
+    }).format(valor);
 }
 
-// ---------- FORMULARIO DINÁMICO ----------
-async function crearFormulario() {
-  const form = document.getElementById("form-producto");
-  if (!form) return;
-
-  try {
-    const res = await fetch(API_URL + "schema", {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-
-    const columnas = await res.json();
-    form.innerHTML = "";
-
-    const excluir = ["id", "fecha_creacion"];
-
-    columnas.forEach(col => {
-      if (excluir.includes(col.name)) return;
-
-      // campo sucursal_id con <select>
-      if (col.name === "sucursal_id") {
-        const div = document.createElement("div");
-        div.classList.add("col-md-4");
-        div.innerHTML = `
-          <label for="sucursal_id" class="form-label">Sucursal</label>
-          <select class="form-select" id="sucursal_id" name="sucursal_id">
-            <option value="">Seleccione sucursal...</option>
-            ${Object.entries(sucursalesMap).map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join("")}
-          </select>
-        `;
-        form.appendChild(div);
-        return;
-      }
-
-      let tipo = "text";
-      if (col.type.includes("INT")) tipo = "number";
-      if (col.type.includes("FLOAT")) tipo = "number";
-      if (col.type.includes("DATE")) tipo = "date";
-
-      const div = document.createElement("div");
-      div.classList.add("col-md-4");
-      div.innerHTML = `
-        <label for="${col.name}" class="form-label text-capitalize">${col.name.replace(/_/g, " ")}</label>
-        <input type="${tipo}" class="form-control" id="${col.name}" name="${col.name}" ${tipo === "number" ? 'step="any"' : ""}>
-      `;
-      form.appendChild(div);
-    });
-
-    // botón guardar
-    const divBoton = document.createElement("div");
-    divBoton.classList.add("col-12", "text-end");
-    divBoton.innerHTML = `
-      <button type="submit" id="btn-guardar" class="btn btn-success mt-3">
-        <i class="bi bi-save"></i> Guardar Producto
-      </button>
-    `;
-    form.appendChild(divBoton);
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (editando) {
-        await actualizarProducto();
-      } else {
-        await guardarProducto();
-      }
-    });
-
-  } catch (error) {
-    console.error("Error generando formulario:", error);
-  }
-}
-
-// ---------- OBTENER DATOS DEL FORMULARIO ----------
-function obtenerDatosFormulario() {
-  const form = document.getElementById("form-producto");
-  const datos = {};
-
-  Array.from(form.elements).forEach(el => {
-    if (!el.id) return;
-    let valor = el.value.trim();
-
-    if (valor === "") return;
-
-    if (el.type === "number" || el.tagName === "SELECT") {
-      valor = parseFloat(valor);
-      if (isNaN(valor)) return;
-    }
-
-    datos[el.id] = valor;
-  });
-
-  return datos;
-}
-
-// ---------- GUARDAR NUEVO PRODUCTO ----------
-async function guardarProducto() {
-  const rol = localStorage.getItem("rol");
-  if (rol === "sucursal") {
-    alert("❌ No tienes permisos para crear productos.");
-    return;
-  }
-
-  const producto = obtenerDatosFormulario();
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      },
-      body: JSON.stringify(producto)
-    });
-    if (!res.ok) throw new Error("Error al guardar producto");
-
-    alert("✅ Producto guardado correctamente");
-    resetFormulario();
-    cargarProductos();
-
-  } catch (error) {
-    console.error("Error al guardar producto:", error);
-    alert("❌ No se pudo guardar el producto");
-  }
-}
-
-// ---------- CARGAR PRODUCTOS ----------
+/* ============================================================
+   📌 CARGAR LISTADO DE PRODUCTOS
+   ============================================================ */
 async function cargarProductos() {
-  const tabla = document.getElementById("tabla-productos");
-  if (!tabla) return;
+    try {
+        const response = await fetch(`${API_URL}/productos/`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-  try {
-    const [colsRes, prodRes] = await Promise.all([
-      fetch(API_URL + "schema", {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-      }),
-      fetch(API_URL, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-      })
-    ]);
+        if (!response.ok) throw new Error("Error al cargar productos");
 
-    const columnas = await colsRes.json();
-    const productos = await prodRes.json();
+        const productos = await response.json();
+        tabla.innerHTML = "";
 
-    const visibles = columnas.filter(c => !["fecha_creacion"].includes(c.name));
-    tabla.innerHTML = "";
+        productos.forEach(prod => tabla.appendChild(crearFilaProducto(prod)));
 
-    if (!productos.length) {
-      tabla.innerHTML = `<tr><td colspan="${visibles.length + 1}" class="text-center">No hay productos</td></tr>`;
-      return;
+    } catch (error) {
+        console.error("❌ Error al cargar productos:", error);
     }
+}
 
-    productos.forEach(p => {
-      const row = document.createElement("tr");
+/* ============================================================
+   🧱 GENERAR FILA EN TABLA
+   ============================================================ */
+function crearFilaProducto(prod) {
+    const tr = document.createElement("tr");
 
-      visibles.forEach(c => {
-        let valor = p[c.name];
-
-        if (c.name === "sucursal_id") {
-          valor = sucursalesMap[p[c.name]] || "—";
-        }
-
-        if (valor === null || valor === undefined || valor === "") valor = "—";
-
-        if (c.name.includes("precio") || c.name.includes("costo")) {
-          valor = valor !== "—" ? `$${Number(valor).toFixed(2)}` : "—";
-        }
-
-        if (c.name.includes("fecha")) {
-          valor = valor !== "—" ? new Date(valor).toLocaleDateString() : "—";
-        }
-
-        row.innerHTML += `<td>${valor}</td>`;
-      });
-
-      row.innerHTML += `
+    tr.innerHTML = `
+        <td>${prod.id}</td>
+        <td>${prod.nombre}</td>
+        <td>${prod.tipo_producto || "-"}</td>
+        <td>${prod.clasificacion || "-"}</td>
+        <td>${prod.estado}</td>
+        <td>${prod.impuestos}%</td>
+        <td>${prod.codigo_sku}</td>
+        <td>${prod.marca || "-"}</td>
+        <td><strong>${formatearCLP(prod.precio)}</strong></td>
+        <td>${prod.cantidad}</td>
+        <td>${prod.sucursal_id}</td>
+        <td>${formatearCLP(prod.costo_neto_unitario)}</td>
+        <td>${formatearCLP(prod.costo_neto_total)}</td>
+        <td>${prod.doc_recepcion_ing}</td>
         <td>
-          <button class="btn btn-sm btn-warning me-1 btn-editar" onclick="cargarParaEditar(${p.id})">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button class="btn btn-sm btn-danger btn-eliminar" onclick="eliminarProducto(${p.id})">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>`;
-      tabla.appendChild(row);
-    });
-
-  } catch (error) {
-    console.error("Error al cargar productos:", error);
-  }
+            <button class="btn btn-warning btn-sm" onclick="editarProducto(${prod.id})">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${prod.id})">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    return tr;
 }
 
-// ---------- CARGAR PRODUCTO EN FORMULARIO ----------
-async function cargarParaEditar(id) {
-  const rol = localStorage.getItem("rol");
-  if (rol !== "admin") {
-    alert("❌ Solo el administrador puede editar productos.");
-    return;
-  }
+/* ============================================================
+   📝 GENERAR FORMULARIO DE PRODUCTO
+   ============================================================ */
+function generarFormulario() {
+    formProducto.innerHTML = `
+        <div class="col-md-4">
+            <label class="form-label">Nombre</label>
+            <input id="nombre" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Clasificación</label>
+            <input id="clasificacion" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Tipo Producto</label>
+            <input id="tipo_producto" class="form-control">
+        </div>
 
-  try {
-    const res = await fetch(API_URL, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-    const productos = await res.json();
-    const producto = productos.find(p => p.id === id);
-    if (!producto) return alert("❌ Producto no encontrado");
+        <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select id="estado" class="form-select">
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Impuestos (%)</label>
+            <input id="impuestos" type="number" class="form-control" value="19">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Código SKU</label>
+            <input id="codigo_sku" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Marca</label>
+            <input id="marca" class="form-control">
+        </div>
 
-    for (const campo in producto) {
-      const input = document.getElementById(campo);
-      if (input) input.value = producto[campo] ?? "";
+        <div class="col-md-3">
+            <label class="form-label">Precio</label>
+            <input id="precio" type="number" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Cantidad</label>
+            <input id="cantidad" type="number" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Sucursal ID</label>
+            <input id="sucursal_id" type="number" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Doc. Recepción</label>
+            <input id="doc_recepcion_ing" class="form-control">
+        </div>
+
+        <div class="col-12 text-end mt-3">
+            <button type="button" onclick="guardarProducto()" class="btn btn-success">
+                <i class="bi bi-save"></i> Guardar
+            </button>
+        </div>
+    `;
+}
+
+/* ============================================================
+   💾 GUARDAR PRODUCTO
+   ============================================================ */
+async function guardarProducto() {
+    const data = {
+        nombre: nombre.value,
+        clasificacion: clasificacion.value,
+        tipo_producto: tipo_producto.value,
+        estado: estado.value,
+        impuestos: Number(impuestos.value),
+        codigo_sku: codigo_sku.value,
+        marca: marca.value,
+        precio: Number(precio.value),
+        cantidad: Number(cantidad.value),
+        sucursal_id: Number(sucursal_id.value),
+        doc_recepcion_ing: doc_recepcion_ing.value || "SIN-DOC",
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/productos/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) throw new Error("Error al guardar producto");
+
+        await cargarProductos();
+        alert("Producto guardado correctamente");
+
+    } catch (error) {
+        console.error(error);
     }
-
-    idProductoEditando = id;
-    editando = true;
-
-    const btn = document.getElementById("btn-guardar");
-    btn.classList.remove("btn-success");
-    btn.classList.add("btn-primary");
-    btn.innerHTML = `<i class="bi bi-pencil-square"></i> Actualizar Producto`;
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-  } catch (error) {
-    console.error("Error cargando producto:", error);
-  }
 }
 
-// ---------- ACTUALIZAR PRODUCTO ----------
-async function actualizarProducto() {
-  const rol = localStorage.getItem("rol");
-  if (rol !== "admin") {
-    alert("❌ No tienes permisos para actualizar productos.");
-    return;
-  }
+/* ============================================================
+   ✏ EDITAR PRODUCTO (CARGA AL FORMULARIO)
+   ============================================================ */
+async function editarProducto(id) {
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-  const datos = obtenerDatosFormulario();
+        const prod = await response.json();
 
-  try {
-    const res = await fetch(API_URL + idProductoEditando, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      },
-      body: JSON.stringify(datos)
-    });
-    if (!res.ok) throw new Error("Error al actualizar producto");
+        nombre.value = prod.nombre;
+        clasificacion.value = prod.clasificacion;
+        tipo_producto.value = prod.tipo_producto;
+        estado.value = prod.estado;
+        impuestos.value = prod.impuestos;
+        codigo_sku.value = prod.codigo_sku;
+        marca.value = prod.marca;
+        precio.value = prod.precio;
+        cantidad.value = prod.cantidad;
+        sucursal_id.value = prod.sucursal_id;
+        doc_recepcion_ing.value = prod.doc_recepcion_ing;
 
-    alert("✅ Producto actualizado correctamente");
-    resetFormulario();
-    cargarProductos();
-
-  } catch (error) {
-    console.error("Error actualizando producto:", error);
-    alert("❌ No se pudo actualizar el producto");
-  }
+    } catch (error) {
+        console.error("❌ Error al editar producto:", error);
+    }
 }
 
-// ---------- ELIMINAR PRODUCTO ----------
+/* ============================================================
+   🗑 ELIMINAR PRODUCTO
+   ============================================================ */
 async function eliminarProducto(id) {
-  const rol = localStorage.getItem("rol");
-  if (rol !== "admin") {
-    alert("❌ Solo el administrador puede eliminar productos.");
-    return;
-  }
+    if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
 
-  if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-  try {
-    const res = await fetch(API_URL + id, { 
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-    if (!res.ok) throw new Error("Error al eliminar producto");
+        if (!response.ok) throw new Error("Error al eliminar");
 
-    alert("🗑️ Producto eliminado correctamente");
+        cargarProductos();
+
+    } catch (error) {
+        console.error("❌ Error al eliminar:", error);
+    }
+}
+
+/* ============================================================
+   🚀 INICIALIZAR PÁGINA
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    generarFormulario();
     cargarProductos();
-
-  } catch (error) {
-    console.error("Error al eliminar producto:", error);
-  }
-}
-
-// ---------- RESETEAR FORMULARIO ----------
-function resetFormulario() {
-  document.getElementById("form-producto").reset();
-  editando = false;
-  idProductoEditando = null;
-
-  const btn = document.getElementById("btn-guardar");
-  btn.classList.remove("btn-primary");
-  btn.classList.add("btn-success");
-  btn.innerHTML = `<i class="bi bi-save"></i> Guardar Producto`;
-}
+});

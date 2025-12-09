@@ -167,6 +167,22 @@ def rol_requerido(roles_permitidos: list):
 
     return verificar_acceso
 
+# ============================================================
+# 🔐 UTILIDADES PARA HASH Y VERIFICACIÓN DE CONTRASEÑAS
+# ============================================================
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    """Genera hash seguro para almacenar en la base de datos."""
+    return pwd_context.hash(password)
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verifica si la contraseña enviada coincide con el hash almacenado."""
+    return pwd_context.verify(password, hashed)
+
+
 
 # Debug: mostrar clave cargada
 print("🔑 SECRET_KEY cargada:", SECRET_KEY)
